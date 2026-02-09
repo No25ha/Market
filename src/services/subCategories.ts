@@ -3,7 +3,7 @@ import { SubCategory } from "@/types";
 
 export const getAllSubCategories = async () => {
   try {
-    const response = await api.get("/subcategories");
+    const response = await api.get("/api/v1/subcategories");
     return response.data?.data || [];
   } catch (error) {
     console.warn("Fetch subcategories error:", parseAxiosError(error));
@@ -13,10 +13,11 @@ export const getAllSubCategories = async () => {
 
 export const getSubCategoryById = async (id: string) => {
   try {
-    const response = await api.get(`/subcategories/${id}`);
+    const response = await api.get(`/api/v1/subcategories/${id}`);
     return response.data?.data;
   } catch (error) {
     console.warn(`Fetch subcategory ${id} error:`, parseAxiosError(error));
+    return null;
   }
 };
 
@@ -33,7 +34,7 @@ export const getSubCategoriesByCategoryId = async (categoryId: any): Promise<Sub
 
   try {
     // Standard query parameter filter for Route Misr API
-    const response = await api.get("/subcategories", {
+    const response = await api.get("/api/v1/subcategories", {
       params: { 'category': id }
     });
 

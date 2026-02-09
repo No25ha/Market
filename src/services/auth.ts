@@ -4,7 +4,7 @@ import { SignUpData, SignInData, AuthResponse } from "@/types";
 // AUTH
 export const signUp = async (data: SignUpData): Promise<AuthResponse> => {
   try {
-    const res = await api.post<AuthResponse>("/auth/signup", data);
+    const res = await api.post<AuthResponse>("/api/v1/auth/signup", data);
     return res.data;
   } catch (error) {
     console.error("Sign up error:", error);
@@ -14,7 +14,7 @@ export const signUp = async (data: SignUpData): Promise<AuthResponse> => {
 
 export const signIn = async (data: SignInData): Promise<AuthResponse> => {
   try {
-    const res = await api.post<AuthResponse>("/auth/signin", data);
+    const res = await api.post<AuthResponse>("/api/v1/auth/signin", data);
     return res.data;
   } catch (error) {
     console.error("Sign in error:", error);
@@ -24,7 +24,7 @@ export const signIn = async (data: SignInData): Promise<AuthResponse> => {
 
 export const forgotPassword = async (email: string) => {
   try {
-    const res = await api.post("/auth/forgotPasswords", { email });
+    const res = await api.post("/api/v1/auth/forgotPasswords", { email });
     return res.data;
   } catch (error) {
     console.error("Forgot password error:", error);
@@ -34,7 +34,7 @@ export const forgotPassword = async (email: string) => {
 
 export const verifyResetCode = async (resetCode: string) => {
   try {
-    const res = await api.post("/auth/verifyResetCode", { resetCode });
+    const res = await api.post("/api/v1/auth/verifyResetCode", { resetCode });
     return res.data;
   } catch (error) {
     console.error("Verify reset code error:", error);
@@ -44,7 +44,7 @@ export const verifyResetCode = async (resetCode: string) => {
 
 export const verifyToken = async (token: string) => {
   try {
-    const res = await api.get("/auth/verifyToken", authHeaders(token));
+    const res = await api.get("/api/v1/auth/verifyToken", authHeaders(token));
     return res.data;
   } catch (error) {
     console.error("Verify token error:", error);
@@ -55,7 +55,7 @@ export const verifyToken = async (token: string) => {
 // USERS
 export const getAllUsers = async (limit = 10, keyword = "") => {
   try {
-    const res = await api.get("/users", { params: { limit, keyword } });
+    const res = await api.get("/api/v1/users", { params: { limit, keyword } });
     return res.data;
   } catch (error) {
     console.error("Get users error:", error);
@@ -65,7 +65,7 @@ export const getAllUsers = async (limit = 10, keyword = "") => {
 
 export const getCurrentUser = async (token: string) => {
   try {
-    const res = await api.get("/users/profile", authHeaders(token));
+    const res = await api.get("/api/v1/users/profile", authHeaders(token));
     return res.data;
   } catch (error) {
     console.error("Get current user error:", error);
@@ -81,7 +81,7 @@ export type UpdateMeData = {
 
 export const updateMe = async (data: UpdateMeData, token: string) => {
   try {
-    const res = await api.put("/users/updateMe", data, authHeaders(token));
+    const res = await api.put("/api/v1/users/updateMe", data, authHeaders(token));
     return res.data;
   } catch (error) {
     console.error("Update profile error:", error);
@@ -97,7 +97,7 @@ export type ChangePasswordData = {
 
 export const changeMyPassword = async (data: ChangePasswordData, token: string) => {
   try {
-    const res = await api.put("/users/changeMyPassword", data, authHeaders(token));
+    const res = await api.put("/api/v1/users/changeMyPassword", data, authHeaders(token));
     return res.data;
   } catch (error) {
     console.error("Change password error:", error);

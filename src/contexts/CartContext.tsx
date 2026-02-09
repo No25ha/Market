@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { getCart, addToCart, removeFromCart, updateCartItem, clearCart } from '@/services/cart';
+import { getCart, addToCart, removeFromCart, updateCartItem, clearCart, applyCouponToCart } from '@/services/cart';
 import { CartItem } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -18,6 +18,7 @@ export interface CartContextType {
   isInCart: (productId: string) => boolean;
   getCartItemQuantity: (productId: string) => number;
   loadCart: () => Promise<void>;
+  applyCoupon: (couponName: string) => Promise<void>;
   cartId: string | null;
 }
 
@@ -178,6 +179,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const applyCoupon = async (couponName: string) => {
+    if (!token) {
+      setIsError('Please login to apply coupon');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setIsError(null);
+      await applyCouponToCart({ couponName }, token);
+      await loadCart();
+    } catch (err) {
+      const error = err instanceof Error ? err.message : 'Failed to apply coupon';
+      setIsError(error);
+      console.error('Apply coupon error:', error);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const isInCart = (productId: string): boolean => {
     return cartItems.some(item => item.product?._id === productId);
   };
@@ -197,6 +219,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     removeFromCart: removeItemFromCart,
     updateQuantity: updateItemQuantity,
     clearCart: clearUserCart,
+    applyCoupon,
     isInCart,
     getCartItemQuantity,
     loadCart,

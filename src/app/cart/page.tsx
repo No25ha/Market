@@ -14,6 +14,11 @@ const CartPage = () => {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({});
+  const [couponCode, setCouponCode] = useState('');
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [couponStatus, setCouponStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+  const { applyCoupon } = useCart();
 
 
   if (!isAuthenticated) {
@@ -166,6 +171,56 @@ const CartPage = () => {
               ))}
             </div>
 
+            {/* Coupon Section */}
+            <div className="mt-8 bg-white rounded-xl p-8 shadow-sm border border-neutral-100">
+              <h3 className="text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                <span className="w-2 h-8 bg-primary-600 rounded-full"></span>
+                Have a Coupon?
+              </h3>
+              <p className="text-neutral-500 text-sm mb-6">Enter your code below to unlock special savings on your order.</p>
+
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  placeholder="Enter code (e.g. SAVE20)"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  className="flex-1 bg-neutral-50 border-2 border-neutral-100 rounded-xl px-6 py-3 font-semibold text-neutral-900 focus:border-primary-500 transition-colors uppercase outline-none"
+                />
+                <Button
+                  onClick={async () => {
+                    if (!couponCode.trim()) return;
+                    try {
+                      setIsApplyingCoupon(true);
+                      setCouponStatus(null);
+                      await applyCoupon(couponCode.trim());
+                      setCouponStatus({ type: 'success', message: 'Coupon applied successfully!' });
+                      setCouponCode('');
+                    } catch (err: any) {
+                      setCouponStatus({ type: 'error', message: err.message || 'Invalid coupon code' });
+                    } finally {
+                      setIsApplyingCoupon(false);
+                    }
+                  }}
+                  isLoading={isApplyingCoupon}
+                  variant="primary"
+                  className="px-10 rounded-xl font-black uppercase tracking-tight"
+                >
+                  Apply
+                </Button>
+              </div>
+
+              {couponStatus && (
+                <div className={`mt-4 p-4 rounded-xl text-sm font-bold flex items-center gap-2 animate-slide-up ${couponStatus.type === 'success'
+                    ? 'bg-green-50 text-green-700 border border-green-100'
+                    : 'bg-red-50 text-red-700 border border-red-100'
+                  }`}>
+                  <div className={`w-2 h-2 rounded-full ${couponStatus.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  {couponStatus.message}
+                </div>
+              )}
+            </div>
+
             {/* Clear Cart Button */}
             <Button
               variant="outline"
@@ -174,7 +229,6 @@ const CartPage = () => {
             >
               Clear Entire Cart
             </Button>
-
           </div>
 
           {/* Order Summary */}

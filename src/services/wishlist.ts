@@ -7,7 +7,7 @@ interface AddWishlistData {
 
 export const addToWishlist = async (data: AddWishlistData, token: string) => {
   try {
-    const response = await api.post("/wishlist", data, authHeaders(token));
+    const response = await api.post("/api/v1/wishlist", data, authHeaders(token));
     return response.data;
   } catch (error) {
     console.error("Add to wishlist error:", parseAxiosError(error));
@@ -17,7 +17,7 @@ export const addToWishlist = async (data: AddWishlistData, token: string) => {
 
 export const removeFromWishlist = async (wishlistId: string, token: string) => {
   try {
-    const response = await api.delete(`/wishlist/${wishlistId}`, authHeaders(token));
+    const response = await api.delete(`/api/v1/wishlist/${wishlistId}`, authHeaders(token));
     return response.data;
   } catch (error) {
     console.error("Remove from wishlist error:", parseAxiosError(error));
@@ -27,7 +27,7 @@ export const removeFromWishlist = async (wishlistId: string, token: string) => {
 
 export const getWishlist = async (token: string) => {
   try {
-    const response = await api.get("/wishlist", authHeaders(token));
+    const response = await api.get("/api/v1/wishlist", authHeaders(token));
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {

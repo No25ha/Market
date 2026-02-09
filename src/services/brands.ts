@@ -3,7 +3,7 @@ import { Brand } from "@/types";
 
 export const getAllBrands = async (limit: number = 100, keyword: string = ""): Promise<Brand[]> => {
   try {
-    const response = await api.get("/brands", {
+    const response = await api.get("/api/v1/brands", {
       params: {
         limit,
         keyword,
@@ -18,7 +18,7 @@ export const getAllBrands = async (limit: number = 100, keyword: string = ""): P
 
 export const getBrandById = async (id: string): Promise<Brand> => {
   try {
-    const response = await api.get(`/brands/${id}`);
+    const response = await api.get(`/api/v1/brands/${id}`);
     return response.data?.data;
   } catch (error) {
     console.error("Fetch brand error:", parseAxiosError(error));

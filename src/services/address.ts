@@ -9,7 +9,7 @@ interface AddAddressData {
 
 export const addAddress = async (data: AddAddressData, token: string) => {
   try {
-    const response = await api.post("/addresses", data, authHeaders(token));
+    const response = await api.post("/api/v1/addresses", data, authHeaders(token));
     return response.data;
   } catch (error) {
     console.error("Add address error:", parseAxiosError(error));
@@ -19,7 +19,7 @@ export const addAddress = async (data: AddAddressData, token: string) => {
 
 export const removeAddress = async (addressId: string, token: string) => {
   try {
-    const response = await api.delete(`/addresses/${addressId}`, authHeaders(token));
+    const response = await api.delete(`/api/v1/addresses/${addressId}`, authHeaders(token));
     return response.data;
   } catch (error) {
     console.error("Remove address error:", parseAxiosError(error));
@@ -29,7 +29,7 @@ export const removeAddress = async (addressId: string, token: string) => {
 
 export const getAddressById = async (addressId: string, token: string) => {
   try {
-    const response = await api.get(`/addresses/${addressId}`, authHeaders(token));
+    const response = await api.get(`/api/v1/addresses/${addressId}`, authHeaders(token));
     return response.data;
   } catch (error) {
     console.error("Get address error:", parseAxiosError(error));
@@ -39,7 +39,7 @@ export const getAddressById = async (addressId: string, token: string) => {
 
 export const getUserAddresses = async (token: string) => {
   try {
-    const response = await api.get("/addresses", authHeaders(token));
+    const response = await api.get("/api/v1/addresses", authHeaders(token));
     return response.data;
   } catch (error) {
     console.error("Get addresses error:", parseAxiosError(error));

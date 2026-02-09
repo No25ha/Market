@@ -23,7 +23,7 @@ export const createCheckoutSession = async (
 ) => {
   try {
     const response = await api.post(
-      `/orders/checkout-session/${orderId}`,
+      `/api/v1/orders/checkout-session/${orderId}`,
       data,
       {
         ...authHeaders(token),
@@ -39,7 +39,7 @@ export const createCheckoutSession = async (
 
 export const createCashOrder = async (orderId: string, data: CashOrderData, token: string) => {
   try {
-    const response = await api.post(`/orders/${orderId}`, data, authHeaders(token));
+    const response = await api.post(`/api/v2/orders/${orderId}`, data, authHeaders(token));
     return response.data;
   } catch (error) {
     console.error("Create cash order error:", parseAxiosError(error));
@@ -49,7 +49,7 @@ export const createCashOrder = async (orderId: string, data: CashOrderData, toke
 
 export const getAllOrders = async () => {
   try {
-    const response = await api.get("/orders");
+    const response = await api.get("/api/v1/orders");
     return response.data;
   } catch (error) {
     console.error("Get all orders error:", parseAxiosError(error));
@@ -60,8 +60,8 @@ export const getAllOrders = async () => {
 export const getUserOrders = async (userId: string, token: string) => {
   // If userId is missing or invalid, try hits /orders directly as a fallback
   const url = (userId && userId !== 'undefined' && userId !== 'null')
-    ? `/orders/user/${userId}`
-    : `/orders`;
+    ? `/api/v1/orders/user/${userId}`
+    : `/api/v1/orders`;
 
   console.log('Fetching orders from URL:', url, 'with userId:', userId);
   try {

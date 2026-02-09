@@ -3,7 +3,7 @@ import { Category } from "@/types";
 
 export const getAllCategories = async (): Promise<Category[]> => {
   try {
-    const response = await api.get("/categories");
+    const response = await api.get("/api/v1/categories");
     return response.data?.data || [];
   } catch (error) {
     console.error("Fetch categories error:", parseAxiosError(error));
@@ -13,7 +13,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
 
 export const getCategoryById = async (id: string): Promise<Category> => {
   try {
-    const response = await api.get(`/categories/${id}`);
+    const response = await api.get(`/api/v1/categories/${id}`);
     return response.data?.data;
   } catch (error) {
     console.error("Fetch category error:", parseAxiosError(error));

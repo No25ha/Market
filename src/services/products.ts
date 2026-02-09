@@ -11,17 +11,17 @@ const handleApiError = (error: unknown, context: string) => {
 
 export const fetchProducts = async () => {
   try {
-    const response = await api.get("/products");
+    const response = await api.get("/api/v1/products");
     return response.data?.data || [];
   } catch (error) {
     handleApiError(error, 'fetchProducts');
-
+    return [];
   }
 };
 
 export const getProductsByCategory = async (categoryId: string): Promise<Product[]> => {
   try {
-    const response = await api.get("/products", { params: { 'category[in]': categoryId } });
+    const response = await api.get("/api/v1/products", { params: { 'category[in]': categoryId } });
     return response.data?.data || [];
   } catch (error) {
     handleApiError(error, 'getProductsByCategory');
@@ -31,7 +31,7 @@ export const getProductsByCategory = async (categoryId: string): Promise<Product
 
 export const getProductsBySubCategory = async (subCategoryId: string): Promise<Product[]> => {
   try {
-    const response = await api.get("/products", {
+    const response = await api.get("/api/v1/products", {
       params: {
         'subcategory': subCategoryId
       }
@@ -45,7 +45,7 @@ export const getProductsBySubCategory = async (subCategoryId: string): Promise<P
 
 export const getProductsByBrand = async (brandId: string): Promise<Product[]> => {
   try {
-    const response = await api.get("/products", { params: { 'brand[in]': brandId } });
+    const response = await api.get("/v1/products", { params: { 'brand[in]': brandId } });
     return response.data?.data || [];
   } catch (error) {
     handleApiError(error, 'getProductsByBrand');
@@ -55,7 +55,7 @@ export const getProductsByBrand = async (brandId: string): Promise<Product[]> =>
 
 export const getProductById = async (id: string): Promise<Product | null> => {
   try {
-    const response = await api.get(`/products/${id}`);
+    const response = await api.get(`/api/v1/products/${id}`);
     return response.data?.data;
   } catch (error) {
     handleApiError(error, 'getProductById');
