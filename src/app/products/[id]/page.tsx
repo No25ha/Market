@@ -8,7 +8,7 @@ import { getProductById } from '@/services/products';
 import { Product } from '@/types';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
-import { FiShoppingCart, FiHeart, FiStar, FiChevronRight, FiCheckCircle } from 'react-icons/fi';
+import { FiShoppingCart, FiHeart, FiStar, FiChevronRight, FiCheckCircle, FiShoppingBag, FiTruck, FiPackage } from 'react-icons/fi';
 import Button from '@/components/ui/Button';
 
 export default function ProductDetailsPage() {

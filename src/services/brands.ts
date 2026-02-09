@@ -18,10 +18,10 @@ export const getAllBrands = async (limit: number = 100, keyword: string = ""): P
 
 export const getBrandById = async (id: string): Promise<Brand> => {
   try {
-    const response = await axios.get(`${API_URL}/${id}`);
+    const response = await api.get(`/brands/${id}`);
     return response.data?.data;
   } catch (error) {
-    console.error("Fetch error:", error);
-    throw error;
+    console.error("Fetch brand error:", parseAxiosError(error));
+    throw new Error(parseAxiosError(error, "Failed to fetch brand."));
   }
 };
