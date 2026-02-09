@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0369a1;
+  --color-primary-dark: #075985;
+  --color-secondary: #f97316;
+  --color-accent: #ef4444;
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-text-main: #111827;
+  --color-text-muted: #6b7280;
+  
+  --font-sans: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Custom Utilities if needed later, but relying on Tailwind mainly */
+@layer utilities {
+  .container-custom {
+    @apply max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 antialiased font-sans;
+}
+
+

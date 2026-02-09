@@ -1,0 +1,27 @@
+import api, { parseAxiosError } from "@/api/api";
+import { Brand } from "@/types";
+
+export const getAllBrands = async (limit: number = 100, keyword: string = ""): Promise<Brand[]> => {
+  try {
+    const response = await api.get("/brands", {
+      params: {
+        limit,
+        keyword,
+      },
+    });
+    return response.data?.data || [];
+  } catch (error) {
+    console.error("Fetch brands error:", parseAxiosError(error));
+    return [];
+  }
+};
+
+export const getBrandById = async (id: string): Promise<Brand> => {
+  try {
+    const response = await axios.get(`${API_URL}/${id}`);
+    return response.data?.data;
+  } catch (error) {
+    console.error("Fetch error:", error);
+    throw error;
+  }
+};
