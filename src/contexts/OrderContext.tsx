@@ -4,6 +4,7 @@ import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { Order } from '@/types';
 import { getUserOrders } from '@/services/orders';
 import { useAuth } from '@/hooks/useAuth';
+import { isTransientError } from '@/api/api';
 
 interface OrderContextType {
   orders: Order[];
@@ -25,41 +26,46 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
   const { user, isAuthenticated, token } = useAuth();
 
-  const loadOrders = useCallback(async () => {
-    console.log('OrderContext: loadOrders called', { isAuthenticated, hasUserId: !!user?.id, userId: user?.id, hasToken: !!token });
+  // Unified Robust Retry Helper
+  const withRetry = useCallback(async <T,>(fn: () => Promise<T>, retries = 5, delay = 1500): Promise<T> => {
+    try {
+      return await fn();
+    } catch (err: any) {
+      if (retries > 0 && isTransientError(err)) {
+        console.warn(`Transient Order API error. Retrying... (${retries} left)`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        const nextDelay = delay * 2 + Math.random() * 500;
+        return withRetry(fn, retries - 1, nextDelay);
+      }
+      throw err;
+    }
+  }, []);
 
-    // Proceed if we have a token, even if userId is missing (service will try fallback endpoint)
+  const loadOrders = useCallback(async () => {
     if (!isAuthenticated || !token) {
-      console.warn('OrderContext: Skipping load due to missing token/auth');
       setOrders([]);
       return;
     }
 
     const targetUserId = user?.id || '';
-    if (!targetUserId) {
-      console.warn('OrderContext: userId is missing, attempting fallback fetch using token only');
-    }
 
     try {
       setIsLoading(true);
       setError(null);
       console.log('Loading orders for user:', targetUserId || 'CURRENT_USER_PROFILE');
-      const response = await getUserOrders(targetUserId, token);
-      console.log('Raw orders response:', response);
 
-      // Handle both array and { data: [] } formats
+      const response = await withRetry(() => getUserOrders(targetUserId, token));
       const ordersData = Array.isArray(response) ? response : (response.data || []);
-      console.log('Processed orders:', ordersData);
       setOrders(ordersData);
     } catch (err: unknown) {
-      console.error('Failed to load orders error:', err);
-      const errorResponse = (err as any)?.response?.data?.message || 'Failed to load orders';
-      setError(errorResponse);
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load orders';
+      console.error('Final load orders error:', errorMsg);
+      setError(errorMsg);
       setOrders([]);
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, user?.id, token]);
+  }, [isAuthenticated, user?.id, token, withRetry]);
 
   const refreshOrders = useCallback(async () => {
     await loadOrders();

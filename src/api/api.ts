@@ -43,4 +43,17 @@ export const parseAxiosError = (error: unknown, fallback = "Something went wrong
     return fallback;
 };
 
+export const isTransientError = (error: unknown): boolean => {
+    const message = parseAxiosError(error).toLowerCase();
+    return (
+        message.includes('pool') ||
+        message.includes('500') ||
+        message.includes('network error') ||
+        message.includes('connection') ||
+        message.includes('closed') ||
+        message.includes('econnreset') ||
+        message.includes('timeout')
+    );
+};
+
 export default api;

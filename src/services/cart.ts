@@ -1,4 +1,4 @@
-import api, { authHeaders, parseAxiosError } from "@/api/api";
+import api, { authHeaders, parseAxiosError, isTransientError } from "@/api/api";
 
 interface AddToCartData {
   productId: string;
@@ -22,7 +22,9 @@ export const getCart = async (token: string) => {
         return { data: { products: [], totalCartPrice: 0 } };
       }
     }
-    console.error("Get cart error:", error);
+    if (!isTransientError(error)) {
+      console.error("Get cart error:", error);
+    }
     throw new Error(parseAxiosError(error, "Failed to load cart."));
   }
 };
@@ -36,7 +38,9 @@ export const addToCart = async (data: AddToCartData, token: string) => {
     const res = await api.post("/api/v2/cart", data, authHeaders(token));
     return res.data;
   } catch (error) {
-    console.error("Add to cart API error:", error);
+    if (!isTransientError(error)) {
+      console.error("Add to cart API error:", error);
+    }
     throw new Error(parseAxiosError(error, "Failed to add to cart."));
   }
 };
@@ -46,7 +50,9 @@ export const removeFromCart = async (productId: string, token: string) => {
     const res = await api.delete(`/api/v2/cart/${productId}`, authHeaders(token));
     return res.data;
   } catch (error) {
-    console.error("Remove from cart error:", error);
+    if (!isTransientError(error)) {
+      console.error("Remove from cart error:", error);
+    }
     throw new Error(parseAxiosError(error, "Failed to remove from cart."));
   }
 };
@@ -56,7 +62,9 @@ export const updateCartItem = async (productId: string, data: UpdateCartData, to
     const res = await api.put(`/api/v2/cart/${productId}`, data, authHeaders(token));
     return res.data;
   } catch (error) {
-    console.error("Update cart item error:", error);
+    if (!isTransientError(error)) {
+      console.error("Update cart item error:", error);
+    }
     throw new Error(parseAxiosError(error, "Failed to update item quantity."));
   }
 };
@@ -66,7 +74,9 @@ export const clearCart = async (token: string) => {
     const res = await api.delete("/api/v2/cart", authHeaders(token));
     return res.data;
   } catch (error) {
-    console.error("Clear cart error:", error);
+    if (!isTransientError(error)) {
+      console.error("Clear cart error:", error);
+    }
     throw new Error(parseAxiosError(error, "Failed to clear cart."));
   }
 };
@@ -76,7 +86,9 @@ export const removeAddress = async (addressId: string, token: string) => {
     const res = await api.delete(`/api/v2/addresses/${addressId}`, authHeaders(token));
     return res.data;
   } catch (error) {
-    console.error("Remove address error:", error);
+    if (!isTransientError(error)) {
+      console.error("Remove address error:", error);
+    }
     throw new Error(parseAxiosError(error, "Failed to remove address."));
   }
 };
@@ -86,7 +98,9 @@ export const getAddressById = async (addressId: string, token: string) => {
     const res = await api.get(`/api/v2/addresses/${addressId}`, authHeaders(token));
     return res.data;
   } catch (error) {
-    console.error("Get address error:", error);
+    if (!isTransientError(error)) {
+      console.error("Get address error:", error);
+    }
     throw new Error(parseAxiosError(error, "Failed to load address."));
   }
 };
@@ -96,7 +110,9 @@ export const getUserAddresses = async (token: string) => {
     const res = await api.get("/api/v2/addresses", authHeaders(token));
     return res.data;
   } catch (error) {
-    console.error("Get addresses error:", error);
+    if (!isTransientError(error)) {
+      console.error("Get addresses error:", error);
+    }
     throw new Error(parseAxiosError(error, "Failed to load addresses."));
   }
 };
@@ -117,7 +133,9 @@ export const applyCouponToCart = async (
     );
     return res.data;
   } catch (error) {
-    console.error("Apply coupon error:", error);
+    if (!isTransientError(error)) {
+      console.error("Apply coupon error:", error);
+    }
     throw new Error(parseAxiosError(error, "Failed to apply coupon."));
   }
 };

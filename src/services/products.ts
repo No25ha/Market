@@ -45,7 +45,7 @@ export const getProductsBySubCategory = async (subCategoryId: string): Promise<P
 
 export const getProductsByBrand = async (brandId: string): Promise<Product[]> => {
   try {
-    const response = await api.get("/v1/products", { params: { 'brand[in]': brandId } });
+    const response = await api.get("/api/v1/products", { params: { 'brand[in]': brandId } });
     return response.data?.data || [];
   } catch (error) {
     handleApiError(error, 'getProductsByBrand');

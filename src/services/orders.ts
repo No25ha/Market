@@ -1,4 +1,4 @@
-import api, { authHeaders, parseAxiosError } from "@/api/api";
+import api, { authHeaders, parseAxiosError, isTransientError } from "@/api/api";
 import axios from "axios";
 
 interface ShippingAddress {
@@ -32,7 +32,9 @@ export const createCheckoutSession = async (
     );
     return response.data;
   } catch (error) {
-    console.error("Create checkout session error:", parseAxiosError(error));
+    if (!isTransientError(error)) {
+      console.error("Create checkout session error:", parseAxiosError(error));
+    }
     throw new Error(parseAxiosError(error, "Failed to create checkout session."));
   }
 };
@@ -42,7 +44,9 @@ export const createCashOrder = async (orderId: string, data: CashOrderData, toke
     const response = await api.post(`/api/v2/orders/${orderId}`, data, authHeaders(token));
     return response.data;
   } catch (error) {
-    console.error("Create cash order error:", parseAxiosError(error));
+    if (!isTransientError(error)) {
+      console.error("Create cash order error:", parseAxiosError(error));
+    }
     throw new Error(parseAxiosError(error, "Failed to create order."));
   }
 };
@@ -58,11 +62,7 @@ export const getAllOrders = async () => {
 };
 
 export const getUserOrders = async (userId: string, token: string) => {
-  // If userId is missing or invalid, try hits /orders directly as a fallback
-  const url = (userId && userId !== 'undefined' && userId !== 'null')
-    ? `/api/v1/orders/user/${userId}`
-    : `/api/v1/orders`;
-
+  const url = `/api/v1/orders/user/${userId}`
   console.log('Fetching orders from URL:', url, 'with userId:', userId);
   try {
     const response = await api.get(url, authHeaders(token));
@@ -75,7 +75,9 @@ export const getUserOrders = async (userId: string, token: string) => {
         return { data: [] };
       }
     }
-    console.error("Get user orders error:", parseAxiosError(error));
+    if (!isTransientError(error)) {
+      console.error("Get user orders error:", parseAxiosError(error));
+    }
     throw new Error(parseAxiosError(error, "Failed to load your orders."));
   }
 };

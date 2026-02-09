@@ -4,6 +4,7 @@ import React, { createContext, useState, useEffect, ReactNode, useCallback } fro
 import { getCart, addToCart, removeFromCart, updateCartItem, clearCart, applyCouponToCart } from '@/services/cart';
 import { CartItem } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
+import { isTransientError } from '@/api/api';
 
 export interface CartContextType {
   cartItems: CartItem[];
@@ -33,13 +34,28 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [isError, setIsError] = useState<string | null>(null);
   const { token, isAuthenticated } = useAuth();
 
+  // Unified Robust Retry Helper
+  const withRetry = useCallback(async <T,>(fn: () => Promise<T>, retries = 5, delay = 1500): Promise<T> => {
+    try {
+      return await fn();
+    } catch (err: any) {
+      if (retries > 0 && isTransientError(err)) {
+        console.warn(`Transient Cart API error. Retrying... (${retries} left)`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        const nextDelay = delay * 2 + Math.random() * 500;
+        return withRetry(fn, retries - 1, nextDelay);
+      }
+      throw err;
+    }
+  }, []);
+
   const loadCart = useCallback(async () => {
     if (!token) return;
 
     try {
       setIsLoading(true);
       setIsError(null);
-      const response = await getCart(token);
+      const response = await withRetry(() => getCart(token));
 
       if (response) {
         const id = response.data?._id || response.data?.id || response.cartId || response._id;
@@ -52,16 +68,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         if (id) {
           localStorage.setItem('cartId', id);
         }
-        console.log('Cart loaded with ID:', id);
+        console.log('Cart loaded successfully');
       }
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Failed to load cart';
       setIsError(error);
-      console.error('Load cart error:', error);
+      console.error('Final load cart error:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, [token, withRetry]);
 
   // Load cart on mount and when auth changes
   useEffect(() => {
@@ -84,36 +100,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const MAX_RETRIES = 2;
-    let attempt = 0;
-
-    const performAdd = async (): Promise<void> => {
-      try {
-        setIsError(null);
-        await addToCart({ productId }, token);
-        await loadCart();
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to add to cart';
-
-        // Simple retry for "Pool was force destroyed" or 500 errors
-        if (attempt < MAX_RETRIES && (errorMsg.includes('Pool') || errorMsg.includes('500'))) {
-          attempt++;
-          console.warn(`Retry attempt ${attempt} for product ${productId}`);
-          // Wait a bit before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-          return performAdd();
-        }
-
-        setIsError(errorMsg);
-        console.error('Add to cart error after retries:', errorMsg);
-        throw err; // Re-throw to allow component to handle loading state
-      }
-    };
-
     try {
-      await performAdd();
+      setIsError(null);
+      await withRetry(() => addToCart({ productId }, token));
+      await loadCart();
     } catch (err) {
-      // Error already handled in performAdd
+      const errorMsg = err instanceof Error ? err.message : 'Failed to add to cart';
+      setIsError(errorMsg);
+      console.error('Final add to cart error:', errorMsg);
     }
   };
 
@@ -125,15 +119,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setIsError(null);
-      await removeFromCart(productId, token);
-      // Remove from local state optimistically
-      setCartItems(cartItems.filter(item => item.product?._id !== productId));
-      // Reload to ensure consistency
+      await withRetry(() => removeFromCart(productId, token));
       await loadCart();
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Failed to remove from cart';
       setIsError(error);
-      console.error('Remove from cart error:', error);
     }
   };
 
@@ -150,13 +140,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setIsError(null);
-      await updateCartItem(productId, { quantity }, token);
-      // Reload cart to get updated prices
+      await withRetry(() => updateCartItem(productId, { quantity }, token));
       await loadCart();
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Failed to update quantity';
       setIsError(error);
-      console.error('Update quantity error:', error);
     }
   };
 
@@ -168,14 +156,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setIsError(null);
-      await clearCart(token);
+      await withRetry(() => clearCart(token));
       setCartItems([]);
       setTotalPrice(0);
       setTotalPriceAfterDiscount(undefined);
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Failed to clear cart';
       setIsError(error);
-      console.error('Clear cart error:', error);
     }
   };
 
@@ -188,12 +175,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       setIsError(null);
-      await applyCouponToCart({ couponName }, token);
+      await withRetry(() => applyCouponToCart({ couponName }, token));
       await loadCart();
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Failed to apply coupon';
       setIsError(error);
-      console.error('Apply coupon error:', error);
       throw err;
     } finally {
       setIsLoading(false);

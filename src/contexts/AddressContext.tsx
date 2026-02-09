@@ -4,6 +4,7 @@ import React, { createContext, useState, useEffect, ReactNode, useCallback } fro
 import { getUserAddresses, addAddress, removeAddress } from '@/services/address';
 import { Address, AddAddressData } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
+import { isTransientError } from '@/api/api';
 
 export interface AddressContextType {
   addresses: Address[];
@@ -25,32 +26,46 @@ export const AddressProvider = ({ children }: { children: ReactNode }) => {
   const [isError, setIsError] = useState<string | null>(null);
   const { token, isAuthenticated } = useAuth();
 
+  // Unified Robust Retry Helper
+  const withRetry = useCallback(async <T,>(fn: () => Promise<T>, retries = 5, delay = 1500): Promise<T> => {
+    try {
+      return await fn();
+    } catch (err: any) {
+      if (retries > 0 && isTransientError(err)) {
+        console.warn(`Transient Address API error. Retrying... (${retries} left)`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        const nextDelay = delay * 2 + Math.random() * 500;
+        return withRetry(fn, retries - 1, nextDelay);
+      }
+      throw err;
+    }
+  }, []);
+
   const loadAddresses = useCallback(async () => {
     if (!token) return;
 
     try {
       setIsLoading(true);
       setIsError(null);
-      const response = await getUserAddresses(token);
+      const response = await withRetry(() => getUserAddresses(token));
       setAddresses(response.data || []);
-      // Auto-select first address if available
+
       if (response.data && response.data.length > 0 && !selectedAddressId) {
         setSelectedAddressId(response.data[0]._id);
       }
     } catch (err: any) {
-      if (err.response?.status === 404 || err.response?.status === 500) {
+      if (err.response?.status === 404) {
         setAddresses([]);
         return;
       }
       const error = err instanceof Error ? err.message : 'Failed to load addresses';
       setIsError(error);
-      console.error('Load addresses error:', error);
+      console.error('Final load addresses error:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [token, selectedAddressId]);
+  }, [token, selectedAddressId, withRetry]);
 
-  // Load addresses on mount and when auth changes
   useEffect(() => {
     const initAddresses = async () => {
       if (isAuthenticated && token) {
@@ -72,13 +87,11 @@ export const AddressProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setIsError(null);
-      await addAddress(data, token);
-      // Reload addresses to get the new one
+      await withRetry(() => addAddress(data, token));
       await loadAddresses();
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Failed to add address';
       setIsError(error);
-      console.error('Add address error:', error);
     }
   };
 
@@ -90,18 +103,14 @@ export const AddressProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setIsError(null);
-      await removeAddress(addressId, token);
-      // Remove from local state
-      setAddresses(addresses.filter(addr => addr._id !== addressId));
-      // If removed address was selected, select first available
+      await withRetry(() => removeAddress(addressId, token));
+      setAddresses(prev => prev.filter(addr => addr._id !== addressId));
       if (selectedAddressId === addressId) {
-        const remaining = addresses.filter(addr => addr._id !== addressId);
-        setSelectedAddressId(remaining.length > 0 ? remaining[0]._id : null);
+        setSelectedAddressId(null);
       }
     } catch (err) {
       const error = err instanceof Error ? err.message : 'Failed to remove address';
       setIsError(error);
-      console.error('Remove address error:', error);
     }
   };
 
